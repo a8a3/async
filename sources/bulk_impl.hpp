@@ -55,13 +55,21 @@ public:
 
    // reader_observer impl
    void notify(const std::string& str) override {
+
       if (current_command_) {
+         if (str == command::block_start) {
+            if (current_command_->get_type() == command::command_type::fixed) {
+               out_command(current_command_);
+               current_command_ = create_command(str);
+               return;
+            }
+         }
          current_command_->add_subcommand(str);
 
          if(current_command_->is_full()) {
             out_command(current_command_);
             current_command_.release();
-         } 
+         }
 
       } else {
          current_command_ = create_command(str);
