@@ -22,6 +22,7 @@ int main( int argc, char** argv) {
 
    const auto console_printer = [] (const command_ptr& cmd) {
       const auto sub_cmds = cmd->get_sub_commands();
+      std::cout << "\tbulk ";
       std::for_each(sub_cmds.cbegin(), sub_cmds.cend(), 
       [&sub_cmds, i=size_t{0}] (const auto& token) mutable {
          std::cout << token;
@@ -39,6 +40,7 @@ int main( int argc, char** argv) {
       
       const auto file_name = "bulk" + std::to_string(cmd_creation_time.count()) + ".txt";
       std::ofstream file(file_name);
+      file << "\tbulk ";
 
       std::for_each(sub_cmds.cbegin(), sub_cmds.cend(), 
       [&sub_cmds, &file, i=size_t{0}] (const auto& token) mutable {

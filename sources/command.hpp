@@ -8,11 +8,19 @@
 
 // ------------------------------------------------------------------
 class command {
-public:   
-    static constexpr auto block_start = "{";
-    static constexpr auto block_end   = "}";
+public:
 
-   command() : now_(std::chrono::system_clock::now()) {}
+   enum class command_type {
+      fixed = 0,
+      free
+   };
+
+   static constexpr auto block_start = "{";
+   static constexpr auto block_end   = "}";
+
+   command(command_type type) : now_(std::chrono::system_clock::now())
+                              , type_(type) {}
+
    virtual bool is_full() const = 0;
    virtual void add_subcommand(const std::string& subcommand) = 0;
    virtual ~command() = default;
@@ -26,11 +34,15 @@ public:
    const creation_time_point& get_creation_time_point() const {
       return now_;
    }
+
+   command_type get_type() const {return type_;}
+
 protected:
    sub_commands sub_commands_;
 
 private:
    const creation_time_point now_;
+   const command_type        type_;
 };
 using command_ptr = std::unique_ptr<command>;
 
@@ -39,7 +51,9 @@ class fixed_size_command  : public command {
    const size_t command_size_;
 
 public:
-   fixed_size_command(size_t command_size) : command_size_(command_size) {
+   fixed_size_command(size_t command_size)
+   : command(command_type::fixed)
+   , command_size_(command_size) {
       sub_commands_.reserve(command_size_);
    }
 
@@ -48,7 +62,7 @@ public:
    };
 
    void add_subcommand(const std::string& subcommand) override {
-      if (is_full()) {
+      if (is_full() || subcommand == block_start) {
          return;
       }
       sub_commands_.push_back(subcommand);
@@ -60,7 +74,7 @@ class free_size_command : public command {
    size_t open_brackets_count_{1};
 
 public:   
-   free_size_command() = default;
+   free_size_command() : command(command_type::free) {}
 
    bool is_full() const override {
       return open_brackets_count_ == 0;
