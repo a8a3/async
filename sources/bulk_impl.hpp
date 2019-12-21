@@ -38,9 +38,7 @@ public:
       if (token == command::block_start) {
          return std::make_unique<free_size_command>();
       }
-      auto fixed_size_cmd = std::make_unique<fixed_size_command>(bulk_size_);
-      fixed_size_cmd->add_subcommand(token);
-      return fixed_size_cmd;
+      return std::make_unique<fixed_size_command>(bulk_size_);
    }
 
    void add_printer(const printer& prn) {
@@ -48,6 +46,10 @@ public:
    }
 
    void out_command(const command_ptr& cmd) const {
+      if(cmd->get_sub_commands().empty()){
+         return;
+      }
+      
       for(const auto& printer: printers_) {
          printer(cmd);
       }
@@ -55,25 +57,14 @@ public:
 
    // reader_observer impl
    void notify(const std::string& str) override {
-
-      if (current_command_) {
-         if (str == command::block_start) {
-            if (current_command_->get_type() == command::command_type::fixed) {
-               out_command(current_command_);
-               current_command_ = create_command(str);
-               return;
-            }
-         }
-         current_command_->add_subcommand(str);
-
-         if(current_command_->is_full()) {
-            out_command(current_command_);
-            current_command_.release();
-         }
-
-      } else {
+      if(!current_command_){
          current_command_ = create_command(str);
       }
+
+      if (!current_command_->add_subcommand(str)) {
+         out_command(current_command_);
+         current_command_ = create_command(str);
+      } 
    }
 
 private:
