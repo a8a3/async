@@ -19,7 +19,7 @@ public:
 };
 using reader_observer_sptr = std::shared_ptr<reader_observer>;
 using reader_observer_wptr = std::weak_ptr<reader_observer>;
-
+using reader_observer_uptr = std::unique_ptr<reader_observer>;
 
 // ------------------------------------------------------------------
 class bulk_commands : public reader_observer {
@@ -74,6 +74,8 @@ private:
    using printers = std::list<printer>; 
    printers printers_;
 };
+
+using bulk_ptr = std::unique_ptr<bulk_commands>;
 
 // ------------------------------------------------------------------
 class reader {

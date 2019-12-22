@@ -2,6 +2,7 @@
 
 #include "async.h"
 
+// ------------------------------------------------------------------
 int main(int, char *[]) {
     std::size_t bulk = 5;
     auto h = async::connect(bulk);

@@ -1,16 +1,22 @@
 #include "async.h"
-#include "bulk_impl.hpp"
+#include "asyncer.hpp"
 
 namespace async {
 
-handle_t connect(std::size_t /*bulk*/) {
-    return nullptr;
+namespace {
+asyncer g_asyncer;
 }
 
-void receive(handle_t /*handle*/, const char */*data*/, std::size_t /*size*/) {
+handle_t connect(std::size_t bulk) {
+    return g_asyncer.connect(bulk);
 }
 
-void disconnect(handle_t /*handle*/) {
+void receive(handle_t handle, const char* data, std::size_t size) {
+    return g_asyncer.receive(handle, data, size);
 }
 
+void disconnect(handle_t handle) {
+    g_asyncer.disconnect(handle);
 }
+
+} // namespace async
