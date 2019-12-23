@@ -11,19 +11,9 @@
 
 #include "command.hpp"
 
-// ------------------------------------------------------------------
-class reader_observer {
-public:
-   virtual void notify(const std::string& str) = 0;
-   virtual ~reader_observer() = default;
-};
-using reader_observer_sptr = std::shared_ptr<reader_observer>;
-using reader_observer_wptr = std::weak_ptr<reader_observer>;
-using reader_observer_uptr = std::unique_ptr<reader_observer>;
 
 // ------------------------------------------------------------------
-class bulk_commands : public reader_observer {
-
+class bulk_commands {
 public:
    using printer = std::function<void(const command_ptr&)>;
    
@@ -67,8 +57,7 @@ public:
       }
    }
 
-   // reader_observer impl
-   void notify(const std::string& str) override {
+   void process(const std::string& str) {
       if(!current_command_){
          current_command_ = create_command(str);
       }
@@ -88,37 +77,3 @@ private:
 };
 
 using bulk_ptr = std::unique_ptr<bulk_commands>;
-
-// ------------------------------------------------------------------
-class reader {
-public:
-   reader() = default;
-  ~reader() = default;
-
-  void read(std::istream& s) const {
-     std::string str;
-
-     while (s.peek() != '\n' && std::getline(s, str)) {
-        for (auto& observer: observers_) {
-           if (!observer.expired()) {
-              observer.lock()->notify(str);
-           }
-        }
-     }
-     s.ignore();
-  }
-
-  void subscribe(const reader_observer_sptr& observer) {
-     observers_.push_back(observer);
-  }
-
-  void unsubscribe(const reader_observer_sptr& observer) {
-     observers_.remove_if([&observer](const auto& stored_observer) {
-        return !observer.owner_before(stored_observer) &&
-               !stored_observer.owner_before(observer);
-     });
-  }
-
-private:
-   std::list<reader_observer_wptr> observers_;
-};

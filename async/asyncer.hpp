@@ -37,8 +37,9 @@ void receive(handle_t handle, const char* data, std::size_t) {
 
     std::stringstream ss(data);
     std::string item;
-    while (std::getline(ss, item, '\n')) {
-        bulk->second->notify(item);
+    constexpr auto sep{'\n'};
+    while (std::getline(ss, item, sep)) {
+        bulk->second->process(item);
     }
 }
 
