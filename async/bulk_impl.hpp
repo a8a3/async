@@ -27,7 +27,19 @@ class bulk_commands : public reader_observer {
 public:
    using printer = std::function<void(const command_ptr&)>;
    
-   bulk_commands(size_t bulk_size) : bulk_size_(bulk_size) {}
+   bulk_commands(size_t bulk_size) : bulk_size_(bulk_size) {
+      const auto console_printer = [](const command_ptr& cmd) {
+         std::cout << *cmd << std::endl;
+      };
+
+      // TODO
+      const auto file_printer = [](const command_ptr&) {
+
+      };
+
+      add_printer(console_printer);
+      add_printer(file_printer);
+   }
   ~bulk_commands() {
       if (current_command_) {
          out_command(current_command_);

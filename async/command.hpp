@@ -9,6 +9,8 @@
 // ------------------------------------------------------------------
 class command {
 public:
+   friend std::ostream& operator << (std::ostream&, const command&);
+
    static constexpr auto block_start = "{";
    static constexpr auto block_end   = "}";
 
@@ -34,6 +36,24 @@ private:
    const creation_time_point now_;
 };
 using command_ptr = std::unique_ptr<command>;
+
+// ------------------------------------------------------------------
+std::ostream& operator << (std::ostream& o, const command& cmd) {
+   const auto sub_cmds = cmd.sub_commands_;
+   std::cout << "\tbulk ";
+
+   std::for_each(sub_cmds.cbegin(), sub_cmds.cend(),
+      [&sub_cmds, &o, i=size_t{0}] (const auto& token) mutable {
+      o << token;
+      if (i < sub_cmds.size()) {
+         o << " ";
+         ++i;
+      }
+   });
+   o << std::endl;
+
+   return o;
+}
 
 // ------------------------------------------------------------------
 class fixed_size_command  : public command {
