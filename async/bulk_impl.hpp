@@ -14,10 +14,13 @@
 
 // ------------------------------------------------------------------
 class bulk_commands {
+   std::stringstream ss_;
+
 public:
    using printer = std::function<void(const command_ptr&)>;
    
    bulk_commands(size_t bulk_size) : bulk_size_(bulk_size) {
+
       const auto console_printer = [](const command_ptr& cmd) {
          std::cout << *cmd << std::endl;
       };
@@ -27,13 +30,26 @@ public:
 
       };
 
-      add_printer(console_printer);
-      add_printer(file_printer);
+      printers_.reserve(2);
+      printers_.push_back(console_printer);
+      printers_.push_back(file_printer);
    }
-  ~bulk_commands() {
+   ~bulk_commands() {
       if (current_command_) {
          out_command(current_command_);
       }
+   }
+
+   void add_raw_commands(const std::string& raw_commands) {
+      if (ss_.eof()) {
+         ss_.clear();
+
+         if (raw_commands.front() == '\n') {
+            ss_ << raw_commands.substr(1);
+            return;
+         }
+      }
+      ss_ << raw_commands;
    }
 
    command_ptr create_command(const std::string& token) {
@@ -41,10 +57,6 @@ public:
          return std::make_unique<free_size_command>();
       }
       return std::make_unique<fixed_size_command>(bulk_size_);
-   }
-
-   void add_printer(const printer& prn) {
-      printers_.push_back(prn);
    }
 
    void out_command(const command_ptr& cmd) const {
@@ -57,7 +69,14 @@ public:
       }
    }
 
-   void process(const std::string& str) {
+   void process() {
+      if (ss_.eof()) {
+         return;
+      }
+
+      std::string str;
+      std::getline(ss_, str);
+
       if(!current_command_){
          current_command_ = create_command(str);
       }
@@ -72,7 +91,7 @@ private:
    command_ptr current_command_;
    const size_t bulk_size_;
 
-   using printers = std::list<printer>; 
+   using printers = std::vector<printer>;
    printers printers_;
 };
 

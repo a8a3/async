@@ -2,6 +2,9 @@
 
 #include <unordered_map>
 #include <sstream>
+#include <atomic>
+#include <thread>
+#include <mutex>
 
 #include "async.h"
 #include "bulk_impl.hpp"
@@ -12,15 +15,29 @@ namespace async {
 class asyncer {
 using bulks = std::unordered_map<void*, bulk_ptr>;
 bulks bulks_;
+std::atomic_bool stop_{false};
+std::thread bulk_handling_thread_;
+std::mutex mut_;
 
+public:
 
-// TODO synchronize commands to get ability to call it 
-//      from different threads...
+// ------------------------------------------------------------------
+asyncer() {
+   bulk_handling_thread_ = std::thread(&asyncer::process_loop, this);
+}
 
-public: 
+// ------------------------------------------------------------------
+~asyncer() {
+   stop_.store(true);
+
+   if (bulk_handling_thread_.joinable()) {
+      bulk_handling_thread_.join();
+   }
+}
 
 // ------------------------------------------------------------------
 handle_t connect(std::size_t size) {
+    std::lock_guard<std::mutex> lock(mut_);
     auto bulk = std::make_unique<bulk_commands>(size);
 
     handle_t result = bulk.get();
@@ -30,23 +47,18 @@ handle_t connect(std::size_t size) {
 
 // ------------------------------------------------------------------
 void receive(handle_t handle, const char* data, std::size_t) {
+    std::lock_guard<std::mutex> lock(mut_);
     auto bulk = bulks_.find(handle);
 
     if (bulk == bulks_.end()) {
-        throw std::runtime_error("attempt to receive data in unexistent handle");
+        throw std::runtime_error("attempt to receive data in nonexistent handle");
     }
-
-    std::stringstream ss(data);
-    std::string item;
-    constexpr auto sep{'\n'};
-
-    while (std::getline(ss, item, sep)) {
-        bulk->second->process(item);
-    }
+    bulk->second->add_raw_commands(data);
 }
 
 // ------------------------------------------------------------------
 void disconnect(handle_t handle) {
+    std::lock_guard<std::mutex> lock(mut_);
     const auto removed = bulks_.erase(handle);
 
     if (removed == 0) {
@@ -57,10 +69,13 @@ void disconnect(handle_t handle) {
 // ------------------------------------------------------------------
 void process_loop() {
 
-// TODO
-//    while(!m_stop) {
-//
-//    }
+   while(!stop_) {
+       std::lock_guard<std::mutex> lock(mut_);
+       for (auto& bulk: bulks_) {
+          bulk.second->process();
+       }
+   }
+   std::cout << "stop loop...\n";
 }
 
 }; // asyncer
