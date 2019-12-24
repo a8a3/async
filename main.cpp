@@ -5,7 +5,7 @@
 
 // ------------------------------------------------------------------
 int main(int, char *[]) {
-    std::size_t bulk = 5;
+    std::size_t bulk = 3;
     auto h = async::connect(bulk);
     auto h2 = async::connect(bulk);
     async::receive(h, "1", 1);

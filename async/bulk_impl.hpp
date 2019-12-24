@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <list>
@@ -25,9 +26,12 @@ public:
          std::cout << *cmd << std::endl;
       };
 
-      // TODO
-      const auto file_printer = [](const command_ptr&) {
-
+      const auto file_printer = [](const command_ptr& cmd) {
+         const auto cmd_creation_time = std::chrono::duration_cast<std::chrono::microseconds>(cmd->get_creation_time_point().time_since_epoch());
+         const auto file_name = "bulk_" + std::to_string(cmd_creation_time.count()) + ".txt";
+         std::ofstream file(file_name, std::ios::app);
+         file << *cmd;
+         file.close();
       };
 
       printers_.reserve(2);

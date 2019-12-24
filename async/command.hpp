@@ -40,7 +40,7 @@ using command_ptr = std::unique_ptr<command>;
 // ------------------------------------------------------------------
 std::ostream& operator << (std::ostream& o, const command& cmd) {
    const auto sub_cmds = cmd.sub_commands_;
-   std::cout << "\tbulk ";
+   o << "\tbulk ";
 
    std::for_each(sub_cmds.cbegin(), sub_cmds.cend(),
       [&sub_cmds, &o, i=size_t{0}] (const auto& token) mutable {
