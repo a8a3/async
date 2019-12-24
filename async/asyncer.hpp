@@ -13,6 +13,7 @@ class asyncer {
 using bulks = std::unordered_map<void*, bulk_ptr>;
 bulks bulks_;
 
+
 // TODO synchronize commands to get ability to call it 
 //      from different threads...
 
@@ -38,6 +39,7 @@ void receive(handle_t handle, const char* data, std::size_t) {
     std::stringstream ss(data);
     std::string item;
     constexpr auto sep{'\n'};
+
     while (std::getline(ss, item, sep)) {
         bulk->second->process(item);
     }
@@ -51,6 +53,16 @@ void disconnect(handle_t handle) {
         throw std::runtime_error("attempt to disconnect nonexistent handle");
     }
 }
+
+// ------------------------------------------------------------------
+void process_loop() {
+
+// TODO
+//    while(!m_stop) {
+//
+//    }
+}
+
 }; // asyncer
     
 } // namespace async

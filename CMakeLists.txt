@@ -29,6 +29,9 @@ add_executable(async_cli main.cpp)
 target_include_directories(async_cli PRIVATE "./async")
 target_link_libraries(async_cli async)
 
+add_executable(async_test async_test.cpp)
+target_link_libraries(async_test PRIVATE Threads::Threads)
+
 install(TARGETS async LIBRARY DESTINATION lib)
 
 set(CPACK_GENERATOR DEB)
