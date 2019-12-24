@@ -75,7 +75,6 @@ void process_loop() {
           bulk.second->process();
        }
    }
-   std::cout << "stop loop...\n";
 }
 
 }; // asyncer
